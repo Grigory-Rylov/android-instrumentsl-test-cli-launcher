@@ -19,7 +19,7 @@ class Launcher(private val args: Array<String>) {
     /**
      * Parse command line arguments and launch instrumental tests.
      */
-    fun launch() {
+    fun launch():Int {
         val options = Options()
         options.addRequiredOption("a", "appId", true, "applicationId")
         options.addRequiredOption("t", "testPackage", true, "Instrumental test package")
@@ -32,11 +32,12 @@ class Launcher(private val args: Array<String>) {
         try {
             val cmd = parser.parse(options, args)
             initAndLaunch(cmd)
+            return 0
         } catch (e: ParseException) {
             System.out.println(e.message)
             formatter.printHelp("Instrumental tes launcher:", options)
 
-            System.exit(1)
+            return 1
         }
     }
 
