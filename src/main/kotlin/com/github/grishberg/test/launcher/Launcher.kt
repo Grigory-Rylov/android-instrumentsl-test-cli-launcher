@@ -5,9 +5,9 @@ import com.android.build.gradle.internal.test.report.TestReportExt
 import com.github.grishberg.tests.DeviceCommandsRunnerFabric
 import com.github.grishberg.tests.InstrumentalExtension
 import com.github.grishberg.tests.InstrumentationTestLauncher
-import com.github.grishberg.tests.adb.AdbWrapperImpl
+import com.github.grishberg.tests.adb.AdbWrapper
+import com.github.grishberg.tests.common.FileLogger
 import com.github.grishberg.tests.common.RunnerLogger
-import com.github.grishberg.tests.planner.InstrumentalTestPlanProvider
 import com.github.grishberg.tests.planner.PackageTreeGenerator
 import org.apache.commons.cli.*
 import java.io.File
@@ -73,14 +73,18 @@ class Launcher(private val args: Array<String>) {
             extension.instrumentalPackage = testPackage
         }
 
-        val logger: RunnerLogger = Log4JLogger()
-        val instrumentalTestPlanProvider = provideInstrumentalTestPlanProvider(amInstrumentParams,
-                extension, logger)
+        // after android-instrumental-test-runner-core:1.6.3 uncomment this
+        // val logger: RunnerLogger = FileLogger(reportDir)
+
+        val logger: RunnerLogger = FileLogger()
+        val commandsRunnerFactory = DeviceCommandsRunnerFabric(amInstrumentParams,
+                extension, PackageTreeGenerator())
+
         val instrumentalLauncher = InstrumentationTestLauncher(projectName,
                 reportDir,
                 extension,
-                AdbWrapperImpl(),
-                DeviceCommandsRunnerFabric(instrumentalTestPlanProvider),
+                AdbWrapper(),
+                commandsRunnerFactory,
                 logger
 
         )
@@ -109,13 +113,5 @@ class Launcher(private val args: Array<String>) {
                     reportUrl)
             throw RuntimeException(message)
         }
-    }
-
-    private fun provideInstrumentalTestPlanProvider(amInstrumentParams: HashMap<String, String>,
-                                                    extension: InstrumentalExtension,
-                                                    logger: RunnerLogger): InstrumentalTestPlanProvider {
-        val packageTreeGenerator = PackageTreeGenerator()
-        return InstrumentalTestPlanProvider(amInstrumentParams, extension,
-                packageTreeGenerator, logger)
     }
 }
