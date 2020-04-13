@@ -17,20 +17,13 @@ class Log4JLogger : RunnerLogger {
     }
 
     override fun i(tag: String, format: String, vararg args: Any) {
-        if (args.size == 1) {
-            val realArgs = args[0]
-            if (realArgs is Array<*>) {
-                when (realArgs.size) {
-                    1 -> log.info("$tag: $format", realArgs[0])
-                    2 -> log.info("$tag: $format", realArgs[0], realArgs[1])
-                    3 -> log.info("$tag: $format", realArgs[0], realArgs[1], realArgs[2])
-                    4 -> log.info("$tag: $format", realArgs[0], realArgs[1], realArgs[2], realArgs[3])
-                    5 -> log.info("$tag: $format", realArgs[0], realArgs[1], realArgs[2], realArgs[3], realArgs[4])
-                    else -> log.info("$tag: $format", realArgs)
-                }
-            } else {
-                log.info("$tag: $format", args)
-            }
+        when (args.size) {
+            1 -> log.info("$tag: $format", args[0])
+            2 -> log.info("$tag: $format", args[0], args[1])
+            3 -> log.info("$tag: $format", args[0], args[1], args[2])
+            4 -> log.info("$tag: $format", args[0], args[1], args[2], args[3])
+            5 -> log.info("$tag: $format", args[0], args[1], args[2], args[3], args[4])
+            else -> log.info("$tag: $format", args)
         }
     }
 
@@ -39,20 +32,13 @@ class Log4JLogger : RunnerLogger {
     }
 
     override fun w(tag: String, format: String, vararg args: Any?) {
-        if (args.size == 1) {
-            val realArgs = args[0]
-            if (realArgs is Array<*>) {
-                when (realArgs.size) {
-                    1 -> log.warn("$tag: $format", realArgs[0])
-                    2 -> log.warn("$tag: $format", realArgs[0], realArgs[1])
-                    3 -> log.warn("$tag: $format", realArgs[0], realArgs[1], realArgs[2])
-                    4 -> log.warn("$tag: $format", realArgs[0], realArgs[1], realArgs[2], realArgs[3])
-                    5 -> log.warn("$tag: $format", realArgs[0], realArgs[1], realArgs[2], realArgs[3], realArgs[4])
-                    else -> log.warn("$tag: $format", realArgs)
-                }
-            } else {
-                log.warn("$tag: $format", args)
-            }
+        when (args.size) {
+            1 -> log.warn("$tag: $format", args[0])
+            2 -> log.warn("$tag: $format", args[0], args[1])
+            3 -> log.warn("$tag: $format", args[0], args[1], args[2])
+            4 -> log.warn("$tag: $format", args[0], args[1], args[2], args[3])
+            5 -> log.warn("$tag: $format", args[0], args[1], args[2], args[3], args[4])
+            else -> log.warn("$tag: $format", args)
         }
     }
 
@@ -69,20 +55,13 @@ class Log4JLogger : RunnerLogger {
     }
 
     override fun d(tag: String, format: String, vararg args: Any?) {
-        if (args.size == 1) {
-            val realArgs = args[0]
-            if (realArgs is Array<*>) {
-                when (realArgs.size) {
-                    1 -> log.debug("$tag: $format", realArgs[0])
-                    2 -> log.debug("$tag: $format", realArgs[0], realArgs[1])
-                    3 -> log.debug("$tag: $format", realArgs[0], realArgs[1], realArgs[2])
-                    4 -> log.debug("$tag: $format", realArgs[0], realArgs[1], realArgs[2], realArgs[3])
-                    5 -> log.debug("$tag: $format", realArgs[0], realArgs[1], realArgs[2], realArgs[3], realArgs[4])
-                    else -> log.debug("$tag: $format", realArgs)
-                }
-            } else {
-                log.debug("$tag: $format", args)
-            }
+        when (args.size) {
+            1 -> log.debug("$tag: $format", args[0])
+            2 -> log.debug("$tag: $format", args[0], args[1])
+            3 -> log.debug("$tag: $format", args[0], args[1], args[2])
+            4 -> log.debug("$tag: $format", args[0], args[1], args[2], args[3])
+            5 -> log.debug("$tag: $format", args[0], args[1], args[2], args[3], args[4])
+            else -> log.debug("$tag: $format", args)
         }
     }
 }
