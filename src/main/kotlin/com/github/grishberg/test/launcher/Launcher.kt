@@ -6,7 +6,6 @@ import com.github.grishberg.tests.DeviceCommandsRunnerFabric
 import com.github.grishberg.tests.InstrumentalExtension
 import com.github.grishberg.tests.InstrumentationTestLauncher
 import com.github.grishberg.tests.adb.AdbWrapper
-import com.github.grishberg.tests.common.FileLogger
 import com.github.grishberg.tests.common.RunnerLogger
 import com.github.grishberg.tests.planner.PackageTreeGenerator
 import org.apache.commons.cli.*
@@ -34,7 +33,7 @@ class Launcher(private val args: Array<String>) {
             initAndLaunch(cmd)
             return 0
         } catch (e: ParseException) {
-            System.out.println(e.message)
+            println(e.message)
             formatter.printHelp("Instrumental tes launcher:", options)
 
             return 1
@@ -74,10 +73,8 @@ class Launcher(private val args: Array<String>) {
             extension.instrumentalPackage = testPackage
         }
 
-        // after android-instrumental-test-runner-core:1.6.3 uncomment this
-        // val logger: RunnerLogger = FileLogger(reportDir)
+        val logger: RunnerLogger = Log4JLogger()
 
-        val logger: RunnerLogger = FileLogger()
         val commandsRunnerFactory = DeviceCommandsRunnerFabric(amInstrumentParams,
                 extension, PackageTreeGenerator())
 
