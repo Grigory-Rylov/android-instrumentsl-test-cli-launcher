@@ -6,7 +6,7 @@ group 'com.github.grishberg'
 version '1.0-SNAPSHOT'
 
 ext {
-    runnerVerstion  = '1.6.5'
+    runnerVerstion  = '1.6.7'
     slf4jVersion = '1.7.25'
     log4jVersion = '1.2.17'
 }
