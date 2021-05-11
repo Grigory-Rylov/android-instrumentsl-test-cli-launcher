@@ -2,15 +2,20 @@ package com.github.grishberg.test.launcher
 
 import com.android.build.gradle.internal.test.report.ReportType
 import com.android.build.gradle.internal.test.report.TestReportExt
-import com.github.grishberg.tests.DeviceCommandsRunnerFabric
+import com.github.grishberg.test.launcher.commands.ArgsProvider
+import com.github.grishberg.test.launcher.commands.CustomCommandsProvider
+import com.github.grishberg.tests.DeviceCommandsRunnerFactory
 import com.github.grishberg.tests.InstrumentalExtension
 import com.github.grishberg.tests.InstrumentationTestLauncher
-import com.github.grishberg.tests.adb.AdbWrapperImpl
+import com.github.grishberg.tests.adb.AdbWrapper
 import com.github.grishberg.tests.common.RunnerLogger
-import com.github.grishberg.tests.planner.InstrumentalTestPlanProvider
-import com.github.grishberg.tests.planner.PackageTreeGenerator
-import org.apache.commons.cli.*
+import org.apache.commons.cli.CommandLine
+import org.apache.commons.cli.DefaultParser
+import org.apache.commons.cli.HelpFormatter
+import org.apache.commons.cli.Options
+import org.apache.commons.cli.ParseException
 import java.io.File
+import kotlin.system.exitProcess
 
 /**
  * Android instrumental test launcher.
@@ -22,7 +27,8 @@ class Launcher(private val args: Array<String>) {
     fun launch() {
         val options = Options()
         options.addRequiredOption("a", "appId", true, "applicationId")
-        options.addRequiredOption("t", "testPackage", true, "Instrumental test package")
+        options.addRequiredOption("p", "testPackage", true, "Instrumental test package")
+        options.addRequiredOption("t", "testApk", true, "apk with tests")
         options.addOption("i", "instrumentalRunner", true, "Instrumental runner")
         options.addOption("o", "outDir", true, "output report dir")
         options.addOption("f", "flavor", true, "flavor")
@@ -32,11 +38,11 @@ class Launcher(private val args: Array<String>) {
         try {
             val cmd = parser.parse(options, args)
             initAndLaunch(cmd)
+            exitProcess(0)
         } catch (e: ParseException) {
-            System.out.println(e.message)
+            println(e.message)
             formatter.printHelp("Instrumental tes launcher:", options)
-
-            System.exit(1)
+            exitProcess(1)
         }
     }
 
@@ -68,54 +74,64 @@ class Launcher(private val args: Array<String>) {
         }
         extension.flavorName = flavor
 
-        val testPackage = cmd.getOptionValue("t")
+        val testPackage = cmd.getOptionValue("p")
         if (testPackage != null) {
             extension.instrumentalPackage = testPackage
         }
 
-        val logger: RunnerLogger = Log4JLogger()
-        val instrumentalTestPlanProvider = provideInstrumentalTestPlanProvider(amInstrumentParams,
-                extension, logger)
-        val instrumentalLauncher = InstrumentationTestLauncher(projectName,
-                reportDir,
-                extension,
-                AdbWrapperImpl(),
-                DeviceCommandsRunnerFabric(instrumentalTestPlanProvider),
-                logger
+        val testApk = cmd.getOptionValue("t")
+        if (testApk != null) {
+            extension.testApkPath = testApk
+        }
 
+        val logger: RunnerLogger = Log4JLogger()
+
+        val instrumentalLauncher = InstrumentationTestLauncher(
+            projectName,
+            reportDir,
+            extension,
+            AdbWrapper(),
+            DeviceCommandsRunnerFactory(extension),
+            logger
         )
+
+        val argsProvider = ArgsProvider(logger)
+        val commandsProvider = CustomCommandsProvider(projectName, argsProvider, logger)
+
+        instrumentalLauncher.setInstrumentationArgsProvider(argsProvider)
+        instrumentalLauncher.setCommandProvider(commandsProvider)
+
         var success = false
         try {
-            instrumentalLauncher.launchTests()
-            success = true
+            success = instrumentalLauncher.launchTests()
+            if (!success) {
+                throw java.lang.RuntimeException("There is some failed tests.")
+            }
         } finally {
-            generateHtmlReport(success,
-                    instrumentalLauncher.resultsDir,
-                    instrumentalLauncher.reportsDir,
-                    instrumentalLauncher.screenshotRelations
+            generateHtmlReport(
+                success,
+                instrumentalLauncher.resultsDir,
+                instrumentalLauncher.reportsDir,
+                instrumentalLauncher.screenshotRelations
             )
         }
     }
 
-    private fun generateHtmlReport(success: Boolean,
-                                   resultDir: File,
-                                   reportsDir: File,
-                                   screenshotMap: Map<String, String>) {
+    private fun generateHtmlReport(
+        success: Boolean,
+        resultDir: File,
+        reportsDir: File,
+        screenshotMap: Map<String, String>
+    ) {
         val report = TestReportExt(ReportType.SINGLE_FLAVOR, resultDir, reportsDir, screenshotMap)
         report.generateReport()
         if (!success) {
             val reportUrl = File(reportsDir, "index.html").path
-            val message = String.format("There were failing tests. See the report at: %s",
-                    reportUrl)
+            val message = String.format(
+                "There were failing tests. See the report at: %s",
+                reportUrl
+            )
             throw RuntimeException(message)
         }
-    }
-
-    private fun provideInstrumentalTestPlanProvider(amInstrumentParams: HashMap<String, String>,
-                                                    extension: InstrumentalExtension,
-                                                    logger: RunnerLogger): InstrumentalTestPlanProvider {
-        val packageTreeGenerator = PackageTreeGenerator()
-        return InstrumentalTestPlanProvider(amInstrumentParams, extension,
-                packageTreeGenerator, logger)
     }
 }
