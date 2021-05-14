@@ -7,7 +7,7 @@ import java.util.HashMap
 
 
 private const val TABLET_ANNOTATION: String =
-    "com.github.grishberg.instrumentaltestsample.TabletOnly"
+    "org.example.android.instrumentation.sampletest.annotations.TabletOnly"
 
 class ArgsProvider(
     private val logger: RunnerLogger

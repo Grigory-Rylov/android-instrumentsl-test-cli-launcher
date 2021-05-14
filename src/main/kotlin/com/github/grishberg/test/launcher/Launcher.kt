@@ -1,7 +1,5 @@
 package com.github.grishberg.test.launcher
 
-import com.android.build.gradle.internal.test.report.ReportType
-import com.android.build.gradle.internal.test.report.TestReportExt
 import com.github.grishberg.test.launcher.commands.ArgsProvider
 import com.github.grishberg.test.launcher.commands.CustomCommandsProvider
 import com.github.grishberg.tests.DeviceCommandsRunnerFactory
@@ -9,6 +7,7 @@ import com.github.grishberg.tests.InstrumentalExtension
 import com.github.grishberg.tests.InstrumentationTestLauncher
 import com.github.grishberg.tests.adb.AdbWrapper
 import com.github.grishberg.tests.common.RunnerLogger
+import io.github.grigoryrylov.android.test.TestReportExt
 import org.apache.commons.cli.CommandLine
 import org.apache.commons.cli.DefaultParser
 import org.apache.commons.cli.HelpFormatter
@@ -43,12 +42,13 @@ class Launcher(private val args: Array<String>) {
             println(e.message)
             formatter.printHelp("Instrumental tes launcher:", options)
             exitProcess(1)
+        } catch (e: TestsFailedException) {
+            exitProcess(2)
         }
     }
 
     private fun initAndLaunch(cmd: CommandLine) {
         val projectName = "project"
-        val amInstrumentParams = HashMap<String, String>()
 
         var reportDir = cmd.getOptionValue("o")
         if (reportDir == null) {
@@ -105,11 +105,15 @@ class Launcher(private val args: Array<String>) {
         try {
             success = instrumentalLauncher.launchTests()
             if (!success) {
-                throw java.lang.RuntimeException("There is some failed tests.")
+                val reportUrl = File(instrumentalLauncher.reportsDir, "index.html").path
+                val message = String.format(
+                    "There were failing tests. See the report at: %s",
+                    reportUrl
+                )
+                throw TestsFailedException()
             }
         } finally {
             generateHtmlReport(
-                success,
                 instrumentalLauncher.resultsDir,
                 instrumentalLauncher.reportsDir,
                 instrumentalLauncher.screenshotRelations
@@ -118,20 +122,11 @@ class Launcher(private val args: Array<String>) {
     }
 
     private fun generateHtmlReport(
-        success: Boolean,
         resultDir: File,
         reportsDir: File,
         screenshotMap: Map<String, String>
     ) {
-        val report = TestReportExt(ReportType.SINGLE_FLAVOR, resultDir, reportsDir, screenshotMap)
+        val report = TestReportExt(resultDir, reportsDir, screenshotMap)
         report.generateReport()
-        if (!success) {
-            val reportUrl = File(reportsDir, "index.html").path
-            val message = String.format(
-                "There were failing tests. See the report at: %s",
-                reportUrl
-            )
-            throw RuntimeException(message)
-        }
     }
 }
